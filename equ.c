@@ -3,12 +3,12 @@
 #include <math.h>
 
 typedef struct equ {
-	int coefficient;
-	short exponent;
+	float coefficient;
+	float exponent;
 	struct equ *next;
 } equ;
 
-void *equAlloc(int coefficient, short exponent){
+void *equAlloc(float coefficient, float exponent){
 	equ *out = malloc(sizeof(equ));
 	out->coefficient = coefficient;
 	out->exponent = exponent;
@@ -24,7 +24,7 @@ void equAppend(equ *head, equ *new){
 }
 
 void equPrint(equ *head){
-	printf("(%dX^%d)", head->coefficient, head->exponent);
+	printf("(%fX^%f)", head->coefficient, head->exponent);
 	if (head->next != NULL){
 		printf(" + ");
 		equPrint(head->next);
@@ -47,16 +47,29 @@ float equSubstitue(equ *head, float x){
 }
 
 equ *differatiate(equ *head){
-	equ *out = equAlloc(head->coefficient * head->exponent, head->exponent - 1);
+	equ *out;
+	if (head->exponent == 0)
+		out = equAlloc(0, 0);
+	else
+		out = equAlloc(head->coefficient * head->exponent, head->exponent - 1);
 	if (head->next != NULL)
 		equAppend(out, differatiate(head->next));
 	return out;
 }
 
+equ *intergrate(equ *head){
+	equ *out = equAlloc(head->coefficient / (head->exponent + 1), head->exponent + 1);
+	if (head->next != NULL)
+		equAppend(out, intergrate(head->next));
+	return out;
+}
+
 int main(){
 	equ *y = equAlloc(2, 2);
-	equ *f = equAlloc(1, 1);
-	equAppend(y, f);
+	equ *x = equAlloc(1, 1);
+	equ *c = equAlloc(1, 0);
+	equAppend(y, x);
+	equAppend(y, c);
 	printf("y = ");
 	equPrint(y);
 
@@ -64,7 +77,13 @@ int main(){
 	printf("dy/dx = ");
 	equPrint(dydx);
 
+	printf("%f\n", equSubstitue(dydx, 5));
+
+	equ *intergral = intergrate(dydx);
+	equPrint(intergral);
+
 	equFree(y);
 	equFree(dydx);
+	equFree(intergral);
 }
 
